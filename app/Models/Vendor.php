@@ -29,6 +29,26 @@ class Vendor extends Model
     }
 
     /**
+     * Users of this Vendor (a vendor can have multiple users if needed)
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+
+    /**
+     * Orders that contained Order Line Items for this Vendor
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function orders()
+    {
+        return $this->hasManyThrough(Order::class, OrderLineItem::class);
+    }
+
+    /**
      * Product Types this Vendor offer
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany

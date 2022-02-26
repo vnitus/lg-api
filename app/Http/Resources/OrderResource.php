@@ -14,6 +14,10 @@ class OrderResource extends JsonResource
      */
     public function toArray($request)
     {
+        $user = $request->user();
+
+        $vendor = $user->vendor;
+
         return [
             'external_order_id' => $this->id,
             'buyer_first_name' => $this->first_name,
@@ -24,7 +28,7 @@ class OrderResource extends JsonResource
             'buyer_shipping_state' => $this->state,
             'buyer_shipping_postal' => $this->postal_code,
             'buyer_shipping_country' => $this->country,
-            'print_line_items' => OrderLineItemResource::collection($this->orderLineItems),
+            'print_line_items' => OrderLineItemResource::collection($vendor->orderLineItems),
         ];
     }
 }

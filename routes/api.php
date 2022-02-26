@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OrderController;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -16,10 +17,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-Route::get('/orders', function () {
-    return OrderResource::collection(Order::all());
+Route::middleware('auth:sanctum')->group(function () {
+    // URL: /orders
+    Route::get('orders', [OrderController::class, 'index'])->name('index');
 });

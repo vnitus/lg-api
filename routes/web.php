@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,4 +16,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+// A cheating way to generate token, for the sake of the test
+Route::get('/tokens/create', function (Request $request) {
+    //$token = $request->user()->createToken($request->token_name);
+    $token = \App\Models\User::find($request->get('user_id'))->createToken('api_token');
+
+    return ['token' => $token->plainTextToken];
 });
