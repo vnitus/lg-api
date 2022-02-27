@@ -26,70 +26,113 @@ class OrderController extends Controller
             return false;
         }
 
-        // XML
-        if ($vendor->api_format === 'xml') {
-            $output = [];
+        // Return different response format for each vendor
+        return match ($vendor->api_format) {
+            'dream_junction' => $this->formatDreamJunction($vendor),
+            'marco_fine_arts' => $this->formatMarcoFineArts($vendor),
+            default => $this->formatDefault($vendor),
+        };
+    }
 
-            // Retrieve all Order Line Items of this Vendor, then group by order_id
-            $orderLineItemsByOrderId = $vendor->orderLineITems->groupBy('order_id');
+    /**
+     *  Custom format of API response for DreamJunction vendor
+     *
+     * @param $vendor
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     */
+    private function formatDreamJunction($vendor)
+    {
+        $output = [];
 
-            if (!empty($orderLineItemsByOrderId)) {
-                // Initiate the array for XML output
-                $output = [
-                    'order' => []
+        // Retrieve all Order Line Items of this Vendor, then group by order_id
+        $orderLineItemsByOrderId = $vendor->orderLineITems->groupBy('order_id');
+
+        if (!empty($orderLineItemsByOrderId)) {
+            // Initiate the array for XML output
+            $output = [
+                'order' => []
+            ];
+
+            // Walk through each Order and its Order Line Items
+            foreach ($orderLineItemsByOrderId as $orderId => $orderLineItems) {
+                // Retrieve the Order
+                $order = Order::findorFail($orderId);
+
+                // Compose the order node
+                $orderNode = [
+                    'order_number' => $orderId,
+                    'customer_data' => [
+                        'first_name' => $order->first_name,
+                        'last_name' => $order->last_name,
+                        'address_1' => $order->address_1,
+                        'address_2' => $order->address_2,
+                        'city' => $order->city,
+                        'state' => $order->state,
+                        'zip' => $order->postal_code,
+                        'country' => $order->country,
+                    ]
                 ];
 
-                // Walk through each Order and its Order Line Items
-                foreach ($orderLineItemsByOrderId as $orderId => $orderLineItems) {
-                    // Retrieve the Order
-                    $order = Order::findorFail($orderId);
-
-                    // Compose the order node
-                    $orderNode = [
-                        'order_number' => $orderId,
-                        'customer_data' => [
-                            'first_name' => $order->first_name,
-                            'last_name' => $order->last_name,
-                            'address_1' => $order->address_1,
-                            'address_2' => $order->address_2,
-                            'city' => $order->city,
-                            'state' => $order->state,
-                            'zip' => $order->postal_code,
-                            'country' => $order->country,
-                        ]
+                // If the Order has some Order Line Items
+                if ($orderLineItems->count() > 0) {
+                    // Compose the items node
+                    $orderNode['items'] = [
+                        'item' => []
                     ];
 
-                    // If the Order has some Order Line Items
-                    if ($orderLineItems->count() > 0) {
-                        // Compose the items node
-                        $orderNode['items'] = [
-                            'item' => []
+                    // Walk through each Order Line Item to compose each item node
+                    foreach ($orderLineItems as $orderLineItem) {
+                        $orderNode['items']['item'][] = [
+                            'order_line_item_id' => $orderLineItem->id,
+                            'product_id' => optional($orderLineItem->product)->id,
+                            'quantity' => $orderLineItem->quantity,
+                            'image_url' => optional(optional($orderLineItem->product)->creative)->image_url,
                         ];
-
-                        // Walk through each Order Line Item to compose each item node
-                        foreach ($orderLineItems as $orderLineItem) {
-                            $orderNode['items']['item'][] = [
-                                'order_line_item_id' => $orderLineItem->id,
-                                'product_id' => optional($orderLineItem->product)->id,
-                                'quantity' => $orderLineItem->quantity,
-                                'image_url' => optional(optional($orderLineItem->product)->creative)->image_url,
-                            ];
-                        }
                     }
-
-                    $output['order'][] = $orderNode;
                 }
-            }
 
-            return response(ArrayToXml::convert($output, 'orders'), 200, [
-                'Content-Type' => 'application/xml'
-            ]);
+                $output['order'][] = $orderNode;
+            }
         }
-        // JSON
-        else {
-            return OrderResource::collection($vendor->orderLineItems->map(function ($orderLineItem) {
-                return $orderLineItem->order;
-            }));
-        }
+
+        return response(ArrayToXml::convert($output, 'orders'), 200, [
+            'Content-Type' => 'application/xml'
+        ]);
+    }
+
+    /**
+     * Custom format of API response for Marco Fine Arts vendor
+     * (Since the format is JSON, we can take advantage of Laravel resource and resource collection)
+     *
+     * @param $vendor
+     * @return array
+     */
+    private function formatMarcoFineArts($vendor)
+    {
+        return [
+            'data' => [
+                'orders' => OrderResource::collection($vendor->orderLineItems->map(function ($orderLineItem) {
+                    return $orderLineItem->order;
+                }))
+            ]
+        ];
+    }
+
+    /**
+     * Custom format of API response for other vendors
+     * (Since the format is JSON, we can take advantage of Laravel resource and resource collection)
+     *
+     * @param $vendor
+     * @return array
+     */
+    private function formatDefault($vendor)
+    {
+        return [
+            'data' => [
+                'orders' => OrderResource::collection($vendor->orderLineItems->map(function ($orderLineItem) {
+                    return $orderLineItem->order;
+                }))
+            ]
+        ];
     }
 }

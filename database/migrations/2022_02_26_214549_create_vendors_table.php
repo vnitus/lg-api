@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('vendors', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->enum('api_format', ['json', 'xml'])->default('json');
+            $table->string('api_format')->default('default');
             $table->timestamps();
         });
     }

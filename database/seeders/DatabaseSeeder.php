@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
 
         $vendor1 = Vendor::create([
             'name' => 'Marco Fine Arts',
-            'api_format' => 'json',
+            'api_format' => 'marco_fine_arts',
             'created_at' => '2021-06-08 00:00:00',
             'updated_at' => '2021-06-08 00:00:00'
         ]);
@@ -49,7 +49,7 @@ class DatabaseSeeder extends Seeder
 
         $vendor2 = Vendor::create([
             'name' => 'DreamJunction',
-            'api_format' => 'xml',
+            'api_format' => 'dream_junction',
             'created_at' => '2021-06-08 00:00:00',
             'updated_at' => '2021-06-08 00:00:00'
         ]);

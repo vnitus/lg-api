@@ -17,12 +17,9 @@ class VendorFactory extends Factory
      */
     public function definition()
     {
-        $formats = ['json', 'xml'];
-        shuffle($formats);
-
         return [
             'name' => $this->faker->company(),
-            'api_format' => $formats[0],
+            'api_format' => 'default',
         ];
     }
 }
