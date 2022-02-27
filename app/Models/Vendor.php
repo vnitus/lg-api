@@ -16,6 +16,7 @@ class Vendor extends Model
      */
     protected $fillable = [
         'name',
+        'api_format',
     ];
 
     /**
